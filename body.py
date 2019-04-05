@@ -27,8 +27,6 @@ import argparse
 import torchvision
 import torchvision.transforms as T
 
-
-
 loss_dic={
     'crossE':nn.CrossEntropyLoss(),
     'mae':nn.L1Loss(),
@@ -36,44 +34,46 @@ loss_dic={
     'bce':nn.BCEWithLogitsLoss(),
 }
 
-def base_args():
-    from train import net_dic
+def base_args(omit = False):
     parser = argparse.ArgumentParser(description='PyTorch Training')
-    parser.add_argument('-n', nargs='?', type=str, choices=list(net_dic.keys()), default = list(net_dic.keys())[0],
-                        help="Net choose: {}".format(list(net_dic.keys())))
-
-    parser.add_argument('--loss', nargs='?', type=str, choices=list(loss_dic.keys()),default=list(loss_dic.keys())[0],
-                        help="Net choose: {}".format(list(loss_dic.keys())))
-
-    parser.add_argument('--suf', nargs='?', type=str, default = '',
-                        help='Suffix name')
-
-    parser.add_argument('--opt', nargs='?', type=str, choices=['adam','sgd'], default = 'adam',
-                        help="Optimizer type: ['adam','sgd'],default 'adam'")
-
-    parser.add_argument('--max_iter', nargs='?', type=int, default = 300,
-                        help='Epoch num, default 300')
-
-    parser.add_argument('--lr_step', nargs='?', type=int, default = 50,
-                        help="Every 'lr_step' epoch, 'lr' decay , default 50")
-
-    parser.add_argument('--lr_decay', nargs='?', type=int, default = 0.6,
-                        help="Learning rate decay rate, default 0.6")
-
-    parser.add_argument('--lr', nargs='?', type=float, default=0.001,
-                        help='Learning rate, default 0.001 (1e-3)')
-
-    parser.add_argument('--weight_decay', nargs='?', type=float, default=0.0001,
-                        help='Weight_decay, default 0.0001 (1e-4)')
 
     parser.add_argument('--gpu', nargs='?', type=int, default=0,
-                        help='GPU num')
+                        help="GPU number,    Default 0")
+    if omit == False:
+        from train import net_dic
+        parser.add_argument('-n', nargs='?', type=str, choices=list(net_dic.keys()), default = list(net_dic.keys())[0],
+                            help="Net choose:{}, Default:{}".format(list(net_dic.keys()),list(net_dic.keys())[0]))
 
-    parser.add_argument('--batch', nargs='?', type=int, default=128,
-                        help='Batch size')
+        parser.add_argument('--suf', nargs='?', type=str, default = '',
+                            help="Suffix name")
+
+        parser.add_argument('--max_iter', nargs='?', type=int, default = 300,
+                            help="Epoch num, Default 300")
+
+        parser.add_argument('--batch', nargs='?', type=int, default=128,
+                            help="Batch size")
+
+        parser.add_argument('--loss', nargs='?', type=str, choices=list(loss_dic.keys()),default=list(loss_dic.keys())[0],
+                            help="loss function choose:{}, Default:{}".format(list(loss_dic.keys()),list(loss_dic.keys())[0]))
+
+        parser.add_argument('--opt', nargs='?', type=str, choices=['adam','sgd'], default = 'adam',
+                            help="Optimizer type: ['adam','sgd'],   Default 'adam'")
+
+        parser.add_argument('--lr', nargs='?', type=float, default=0.001,
+                            help="Learning rate, Default 0.001 (1e-3)")
+
+        parser.add_argument('--weight_decay', nargs='?', type=float, default=0.0001,
+                            help="Weight_decay, Default 0.0001 (1e-4)")
+
+        parser.add_argument('--lr_step', nargs='?', type=int, default = 50,
+                            help="Every 'lr_step' epoch, 'lr' decay, Default 50")
+
+        parser.add_argument('--lr_decay', nargs='?', type=int, default = 0.6,
+                            help="Learning rate decay rate, Default 0.6")
+
 
     parser.add_argument('--resume', nargs='?', type=str, default = None,
-                        help='Continue last training with the address you give')
+                        help="Resume from the checkpoint_address you give")
     return parser
 
 
@@ -119,13 +119,13 @@ class Body(object):
         
         if args.resume is not None:
             self.name = args.resume[14:-4]
-            self.resume(net_dic)
+            self.resume()
         else:
             self.name = timestamp+'_'+args.n if args.suf=='' else self.timestamp+'_'+args.n+'_'+args.suf
             if isExist('.\\checkpoints\\'+self.name+'.pth'):
                 raise('[{}] has been used!'.format(self.name))
 
-            self.args = args
+            self.args = args.__dict__
             self.best = 1000
             self.start = 0
             self.build_model()
@@ -150,14 +150,15 @@ class Body(object):
     def build_model(self):
         # Must be used after self have 'args' and 'device'
         from train import refresh_net_dic, net_dic
+        print(net_dic['wrn'])
         refresh_net_dic(net_dic,self.args)
-        self.net = net_dic[self.args.n].to(self.device)
-        if self.args.opt == 'adam':
-            self.opt = torch.optim.Adam(self.net.parameters(), lr = self.args.lr, weight_decay = self.args.weight_decay)
-        elif self.args.opt == 'sgd':
-            self.opt = torch.optim.SGD(self.net.parameters(), lr = self.args.lr, weight_decay = self.args.weight_decay)
-        self.sch = torch.optim.lr_scheduler.StepLR(self.opt, step_size = self.args.lr_step, gamma = self.args.lr_decay)
-        self.criterion = loss_dic[self.args.loss]
+        self.net = net_dic[self.args['n']].to(self.device)
+        if self.args['opt'] == 'adam':
+            self.opt = torch.optim.Adam(self.net.parameters(), lr = self.args['lr'], weight_decay = self.args['weight_decay'])
+        elif self.args['opt'] == 'sgd':
+            self.opt = torch.optim.SGD(self.net.parameters(), lr = self.args['lr'], weight_decay = self.args['weight_decay'])
+        self.sch = torch.optim.lr_scheduler.StepLR(self.opt, step_size = self.args['lr_step'], gamma = self.args['lr_decay'])
+        self.criterion = loss_dic[self.args['loss']]
 
 
     def save(self,epoch,compare):
@@ -166,7 +167,7 @@ class Body(object):
             torch.save({
                 'best': self.best,
                 'epoch':epoch,
-                'args':self.args.__dict__,
+                'args':self.args,
                 'net': self.net.state_dict(),
                 'opt' : self.opt.state_dict(),
                 'sch' : self.sch.state_dict(),
@@ -208,7 +209,7 @@ class Body(object):
                 'Validation_Loss':loss_meter2,
                 'Validation_Error':error_meter2,
             }
-            for epoch in range(self.start,self.args.max_iter):
+            for epoch in range(self.start,self.args['max_iter']):
                 # Make sure you enable the auto-grad engine
                 self.net.train()
                 loss_meter.reset()

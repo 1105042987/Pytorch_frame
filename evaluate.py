@@ -13,9 +13,10 @@ import argparse
 import time
 
 def get_args():
-    parser = base_args(list(net_dic.keys()))
+    parser = base_args(omit = True)
     parser.add_argument('--ans', action='store_true',
-                        help='Do not use validation data to calc error')
+                        help='Choose this if you want to get the answer of test_data')
+    return parser.parse_args()
 
 if __name__ == "__main__":
     args = get_args()

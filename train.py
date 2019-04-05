@@ -27,7 +27,7 @@ net_dic = {
 }
 
 def refresh_net_dic(net,arg):
-    net['wrn'] = WideResNet(arg.wrn[0], 10, widen_factor=arg.wrn[1], dropRate=arg.wrn[2])
+    net['wrn'] = WideResNet(arg['wrn'][0], 10, widen_factor=arg['wrn'][1], dropRate=arg['wrn'][2])
 
 # user code
 from dataset import *
@@ -36,7 +36,7 @@ from body import *
 def get_args():
     parser = base_args()
     parser.add_argument('--ans', action='store_true',
-                        help='Do not use validation data to calc error')
+                        help='Choose this if you want to use all the train_data to train your model')
     parser.add_argument('--wrn', nargs=3, type=float, default = [28,1,0.2],
                         help='WideResNet param: [depth,widen_factor,dropRate]')
 
