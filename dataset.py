@@ -68,3 +68,6 @@ def loadData(name, Num, batch):
         dataset = cifar10_Dataset(name,Num,transforms,False)
 
     return torch.utils.data.DataLoader(dataset, batch_size=batch, shuffle=True, num_workers=2)
+
+if __name__ == '__main__':
+    pass

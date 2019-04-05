@@ -54,7 +54,7 @@ def base_args(omit = False):
                             help="Batch size")
 
         parser.add_argument('--loss', nargs='?', type=str, choices=list(loss_dic.keys()),default=list(loss_dic.keys())[0],
-                            help="loss function choose:{}, Default:{}".format(list(loss_dic.keys()),list(loss_dic.keys())[0]))
+                            help="Loss function choose:{}, Default:{}".format(list(loss_dic.keys()),list(loss_dic.keys())[0]))
 
         parser.add_argument('--opt', nargs='?', type=str, choices=['adam','sgd'], default = 'adam',
                             help="Optimizer type: ['adam','sgd'],   Default 'adam'")
@@ -303,5 +303,6 @@ def onehot2num(onehot_label):
         raise('onehot2num: onehot must in shape (len_of_batch,len_of_target_class)')
     return torch.max(onehot_label, 1)[1].reshape(-1, 1).long()
 
-
+if __name__ == '__main__':
+    pass
 
