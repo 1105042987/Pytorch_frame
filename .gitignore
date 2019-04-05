@@ -1,0 +1,6 @@
+input/*
+output/*
+logs/*
+checkpoints/*
+__pycache__/*
+net/__pycache__/*
