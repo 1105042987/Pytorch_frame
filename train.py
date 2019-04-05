@@ -10,12 +10,12 @@ import argparse
 import time
 # ---------------------------------- Network Architecture ----------------------------------
 # Define architecture of the network
-from net.LeNet          import LeNet
-from net.DenseNet       import DenseNet
-from net.googlenet      import GoogLeNet
-from net.mobilenetv2    import MobileNetV2
-from net.vgg            import VGG
-from net.wrn            import WideResNet
+from frame.net.LeNet          import LeNet
+from frame.net.DenseNet       import DenseNet
+from frame.net.googlenet      import GoogLeNet
+from frame.net.mobilenetv2    import MobileNetV2
+from frame.net.vgg            import VGG
+from frame.net.wrn            import WideResNet
 
 net_dic = {
     'le':LeNet(), 
@@ -30,8 +30,8 @@ def refresh_net_dic(net,arg):
     net['wrn'] = WideResNet(arg['wrn'][0], 10, widen_factor=arg['wrn'][1], dropRate=arg['wrn'][2])
 
 # user code
-from dataset import *
-from body import *
+from dataset.dataset import *
+from frame.frame import *
 
 def get_args():
     parser = base_args()
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     args = get_args()
     print(args)
     
-    BODY = Body(args)
+    BODY = FrameWork(args)
 
     if args.ans:
         trainloader = loadData("TRAIN", None, args.batch)
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         BODY.train(trainloader,None,ErrorRate)
         BODY.predict(testloader,AnsGet)
     else:
-        trainloader = loadData("train", None, args.batch)
-        validloader = loadData("validation", None, args.batch)
+        trainloader = loadData("train", 1, args.batch)
+        validloader = loadData("validation", 1, args.batch)
         BODY.train(trainloader,validloader,ErrorRate)
       

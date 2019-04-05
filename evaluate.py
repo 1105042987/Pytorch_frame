@@ -4,8 +4,8 @@
 Copyright (c) 2019 Sufer_Qin
 '''
 from train import ErrorRate,AnsGet
-from dataset import *
-from body import *
+from dataset.dataset import *
+from frame.frame import *
 
 # args
 import argparse
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     args = get_args()
     print(args)
     
-    B = Body(args)
+    B = FrameWork(args)
     
     if args.ans:
         testloader = loadData("TEST",None,args.batch)

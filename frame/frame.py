@@ -111,9 +111,9 @@ class weak_GetPredictAnswer(metaclass=ABCMeta):
 
 
 # ---------------------------------- Network Architecture ----------------------------------
-class Body(object):
+class FrameWork(object):
     def __init__(self,args):
-        super(Body,self).__init__()
+        super(FrameWork,self).__init__()
         timestamp = datetime.now().strftime('%m%d_%H[%M]')
         self.device = torch.device('cuda', args.gpu) if torch.cuda.is_available() else torch.device('cpu')
         
