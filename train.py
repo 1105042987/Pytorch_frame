@@ -82,7 +82,7 @@ if __name__ == "__main__":
         BODY.train(trainloader,None,ErrorRate)
         BODY.predict(testloader,AnsGet)
     else:
-        trainloader = loadData("train", 1, args.batch)
-        validloader = loadData("validation", 1, args.batch)
+        trainloader = loadData("train", None, args.batch)
+        validloader = loadData("validation", None, args.batch)
         BODY.train(trainloader,validloader,ErrorRate)
       
