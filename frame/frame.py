@@ -179,79 +179,77 @@ class FrameWork(object):
             }, './checkpoints/'+self.name+'.pth')
 
 
-    def log_record(self,file,epoch,print_dic):
+    def log_record(self,epoch,print_dic,save=False):
         if epoch is None:
             log = "[Test]:  "
         else:
             log = 'Epoch {}, '.format(epoch)
-
         for key,value in print_dic.items():
             if value is not None:
                 log += '{}: {}, '.format(key,value.value()[0])
-
         print(log)
-
-        if file is not None:
-            file.write(log+'\n')
+        if save:
+            with open('./logs/'+self.name+'.log', 'a') as file
+                file.write(log+'\n')
         
 
 
     def train(self,train_loader,validation_loader=None,ErrorClass=weak_ErrorRate):
         if not issubclass(ErrorClass,weak_ErrorRate):
             raise("'ErrorClass' is not the sub class of 'weak_ErrorRate'")
-        with open('./logs/'+self.name+'.log', 'a') as file:
-            # create record meter
-            loss_meter= meter.AverageValueMeter()
-            error_meter = ErrorClass() if ErrorClass is not weak_ErrorRate else None
-            if validation_loader is not None:
-                loss_meter2 = meter.AverageValueMeter()
-                error_meter2 = ErrorClass() if ErrorClass is not weak_ErrorRate else None
-            else:
-                loss_meter2,error_meter2 = None,None
-            print_dic={
-                'Train_Loss':loss_meter,
-                'Train_Error':error_meter,
-                'Validation_Loss':loss_meter2,
-                'Validation_Error':error_meter2,
-            }
-            for epoch in range(self.start,self.args['max_iter']):
-                # Make sure you enable the auto-grad engine
-                self.net.train()
-                loss_meter.reset()
+        # create record meter
+        loss_meter= meter.AverageValueMeter()
+        error_meter = ErrorClass() if ErrorClass is not weak_ErrorRate else None
+        if validation_loader is not None:
+            loss_meter2 = meter.AverageValueMeter()
+            error_meter2 = ErrorClass() if ErrorClass is not weak_ErrorRate else None
+        else:
+            loss_meter2,error_meter2 = None,None
+        print_dic={
+            'Train_Loss':loss_meter,
+            'Train_Error':error_meter,
+            'Validation_Loss':loss_meter2,
+            'Validation_Error':error_meter2,
+        }
+        for epoch in range(self.start,self.args['max_iter']):
+            # Make sure you enable the auto-grad engine
+            self.net.train()
+            loss_meter.reset()
+            if error_meter is not None:
                 error_meter.reset()
-                # train
-                for inputs, targets in tqdm(train_loader):
+            # train
+            for inputs, targets in tqdm(train_loader):
+                inputs, targets = inputs.to(self.device), targets.to(self.device)
+
+                self.opt.zero_grad()
+                outputs = self.net(inputs)
+                loss = self.criterion(outputs, targets)
+
+                loss.backward()
+                self.opt.step()
+
+                loss_meter.add(loss.item())
+                if error_meter is not None:
+                    error_meter.add(outputs,targets)
+            self.sch.step()
+            # validation
+            if validation_loader is not None:
+                # Make sure you disable the auto-grad engine
+                self.net.eval()
+                loss_meter2.reset()
+                error_meter2.reset()
+                for inputs, targets in tqdm(validation_loader):
                     inputs, targets = inputs.to(self.device), targets.to(self.device)
 
-                    self.opt.zero_grad()
                     outputs = self.net(inputs)
                     loss = self.criterion(outputs, targets)
 
-                    loss.backward()
-                    self.opt.step()
-
-                    loss_meter.add(loss.item())
-                    if error_meter is not None:
-                        error_meter.add(outputs,targets)
-                self.sch.step()
-                # validation
-                if validation_loader is not None:
-                    # Make sure you disable the auto-grad engine
-                    self.net.eval()
-                    loss_meter2.reset()
-                    error_meter2.reset()
-                    for inputs, targets in tqdm(validation_loader):
-                        inputs, targets = inputs.to(self.device), targets.to(self.device)
-
-                        outputs = self.net(inputs)
-                        loss = self.criterion(outputs, targets)
-
-                        loss_meter2.add(loss.item())
-                        if error_meter2 is not None:
-                            error_meter2.add(outputs,targets)
-                # record
-                self.log_record(file,epoch,print_dic)
-                self.save(epoch,loss_meter.value()[0])
+                    loss_meter2.add(loss.item())
+                    if error_meter2 is not None:
+                        error_meter2.add(outputs,targets)
+            # record
+            self.log_record(epoch,print_dic,True)
+            self.save(epoch,loss_meter.value()[0])
 
 
     def evaluate(self,test_loader,ErrorClass=weak_ErrorRate):
@@ -276,7 +274,7 @@ class FrameWork(object):
             loss_meter.add(loss.item())
             error_meter.add(outputs,targets)
 
-        self.log_record(None,None,print_dic)
+        self.log_record(None,print_dic)
         
 
 
