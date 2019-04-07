@@ -8,6 +8,8 @@ Copyright (c) 2019 Sufer_Qin
 import argparse
 # time
 import time
+# get dataset
+from dataset.cifar10.dataset import loadData
 # ---------------------------------- Network Architecture ----------------------------------
 # Define architecture of the network
 from frame.net.LeNet          import LeNet
@@ -29,12 +31,11 @@ net_dic = {
 def refresh_net_dic(net,arg):
     net['wrn'] = WideResNet(arg['wrn'][0], 10, widen_factor=arg['wrn'][1], dropRate=arg['wrn'][2])
 
-# user code
-from dataset.dataset import *
-from frame.frame import *
+# frame code
+import frame.frame as FR
 
 def get_args():
-    parser = base_args()
+    parser = FR.base_args()
     parser.add_argument('--ans', action='store_true',
                         help='Choose this if you want to use all the train_data to train your model')
     parser.add_argument('--wrn', nargs=3, type=float, default = [28,1,0.2],
@@ -42,7 +43,7 @@ def get_args():
 
     return parser.parse_args()
 
-class ErrorRate(weak_ErrorRate):
+class ErrorRate(FR.weak_ErrorRate):
     def __init__(self):
         super(ErrorRate,self).__init__()
 
@@ -52,16 +53,16 @@ class ErrorRate(weak_ErrorRate):
         outputs = torch.max(out, 1)[1]
         self.error += torch.sum(outputs != tar).float()
 
-class AnsGet(weak_GetPredictAnswer):
+class AnsGet(FR.weak_GetPredictAnswer):
     def __init__(self):
         super(AnsGet,self).__init__()
 
     def add(self,outputs,index):
         from torch import cat
         if self.data is None:
-            self.data = cat((index, onehot2num(outputs).to('cpu')), 1)
+            self.data = cat((index, FR.onehot2num(outputs).to('cpu')), 1)
         else:
-            outputs = cat((index, onehot2num(outputs).to('cpu')), 1)
+            outputs = cat((index, FR.onehot2num(outputs).to('cpu')), 1)
             self.data = cat((self.data,outputs))
 
     def save(self,name):
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     args = get_args()
     print(args)
     
-    BODY = FrameWork(args)
+    BODY = FR.FrameWork(args)
 
     if args.ans:
         trainloader = loadData("TRAIN", None, args.batch)
@@ -82,7 +83,7 @@ if __name__ == "__main__":
         BODY.train(trainloader,None,ErrorRate)
         BODY.predict(testloader,AnsGet)
     else:
-        trainloader = loadData("train", 1, args.batch)
-        validloader = loadData("validation", 1, args.batch)
+        trainloader = loadData("train", None, args.batch)
+        validloader = loadData("validation", None, args.batch)
         BODY.train(trainloader,validloader,ErrorRate)
       

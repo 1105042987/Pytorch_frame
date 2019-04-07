@@ -14,6 +14,7 @@ import pandas as pd
 import argparse
 from datetime import datetime
 from abc import ABCMeta, abstractmethod
+from re import findall
 isExist = os.path.exists
 
 
@@ -118,7 +119,7 @@ class FrameWork(object):
         self.device = torch.device('cuda', args.gpu) if torch.cuda.is_available() else torch.device('cpu')
         
         if args.resume is not None:
-            self.name = args.resume[14:-4]
+            self.name = findall(r"checkpoints\\(.+?).pth",args.resume)[0]
             self.resume()
         else:
             self.name = timestamp+'_'+args.n if args.suf=='' else self.timestamp+'_'+args.n+'_'+args.suf
