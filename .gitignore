@@ -6,5 +6,6 @@ input/*
 .vscode
 output/*
 logs/*
+!logs/clean.py
 checkpoints/*
 __pycache__

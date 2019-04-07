@@ -189,7 +189,7 @@ class FrameWork(object):
                 log += '{}: {}, '.format(key,value.value()[0])
         print(log)
         if save:
-            with open('./logs/'+self.name+'.log', 'a') as file
+            with open('./logs/'+self.name+'.log', 'a') as file:
                 file.write(log+'\n')
         
 
