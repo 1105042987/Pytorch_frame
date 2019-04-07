@@ -24,10 +24,10 @@ class Dataset(torch.utils.data.Dataset):
     def __init__(self, dataType, Num, transforms = None,has_label = True, **kwargs):
         super(Dataset, self).__init__()
         if Num is None:
-            data = pd.read_csv('.\\dataset\\cifar10\\'+dataType+'.csv')
+            data = pd.read_csv('./dataset/cifar10/'+dataType+'.csv')
             self.lens = len(data)
         else:
-            data = pd.read_csv('.\\dataset\\cifar10\\'+dataType+'.csv', nrows=Num)
+            data = pd.read_csv('./dataset/cifar10/'+dataType+'.csv', nrows=Num)
             self.lens = Num
         if has_label:
             self.labels = torch.from_numpy(data['Category'].values).long()

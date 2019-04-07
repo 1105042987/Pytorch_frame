@@ -121,11 +121,11 @@ class FrameWork(object):
         self.device = torch.device('cuda', args.gpu) if torch.cuda.is_available() else torch.device('cpu')
         
         if args.resume is not None:
-            self.name = findall(r"checkpoints\\(.+?).pth",args.resume)[0]
+            self.name = findall(r"checkpoints/(.+?).pth",args.resume)[0]
             self.resume()
         else:
-            self.name = timestamp+'_'+args.n if args.suf=='' else self.timestamp+'_'+args.n+'_'+args.suf
-            if isExist('.\\checkpoints\\'+self.name+'.pth'):
+            self.name = timestamp+'_'+args.n if args.suf=='' else timestamp+'_'+args.n+'_'+args.suf
+            if isExist('./checkpoints/'+self.name+'.pth'):
                 raise('[{}] has been used!'.format(self.name))
 
             self.args = args.__dict__
@@ -135,8 +135,8 @@ class FrameWork(object):
 
         
     def resume(self):
-        if isExist('.\\checkpoints\\'+self.name+'.pth'):
-            state = torch.load('.\\checkpoints\\'+self.name+'.pth',map_location=lambda storage, loc: storage)
+        if isExist('./checkpoints/'+self.name+'.pth'):
+            state = torch.load('./checkpoints/'+self.name+'.pth',map_location=lambda storage, loc: storage)
 
             self.args = state['args']
             self.best = state['best']
@@ -174,7 +174,7 @@ class FrameWork(object):
                 'net': self.net.state_dict(),
                 'opt' : self.opt.state_dict(),
                 'sch' : self.sch.state_dict(),
-            }, '.\\checkpoints\\'+self.name+'.pth')
+            }, './checkpoints/'+self.name+'.pth')
 
 
     def log_record(self,file,epoch,print_dic):
@@ -197,7 +197,7 @@ class FrameWork(object):
     def train(self,train_loader,validation_loader=None,ErrorClass=weak_ErrorRate):
         if not issubclass(ErrorClass,weak_ErrorRate):
             raise("'ErrorClass' is not the sub class of 'weak_ErrorRate'")
-        with open('.\\logs\\'+self.name+'.log', 'a') as file:
+        with open('./logs/'+self.name+'.log', 'a') as file:
             # create record meter
             loss_meter= meter.AverageValueMeter()
             error_meter = ErrorClass() if ErrorClass is not weak_ErrorRate else None

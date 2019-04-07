@@ -29,7 +29,7 @@ net_dic = {
 }
 
 def refresh_net_dic(net,arg):
-    net['wrn'] = WideResNet(arg['wrn'][0], 10, widen_factor=arg['wrn'][1], dropRate=arg['wrn'][2])
+    net['wrn'] = WideResNet(int(arg['wrn'][0]), 10, widen_factor=int(arg['wrn'][1]), dropRate=arg['wrn'][2])
 
 # frame code
 import frame.frame as FR
