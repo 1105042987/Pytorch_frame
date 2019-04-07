@@ -3,6 +3,7 @@ input/*
 *.png
 *.jpg
 *.tif
+.vscode
 output/*
 logs/*
 checkpoints/*

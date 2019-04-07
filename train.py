@@ -68,7 +68,7 @@ class AnsGet(FR.weak_GetPredictAnswer):
     def save(self,name):
         import pandas as pd
         ans = pd.DataFrame(np.array(self.data),columns = ['ID','Category'])
-        ans.to_csv('.\\output\\{}.csv'.format(name),header=True,index = False)
+        ans.to_csv('./output/{}.csv'.format(name),header=True,index = False)
 
 
 if __name__ == "__main__":

@@ -66,7 +66,7 @@ def base_args(omit = False):
         parser.add_argument('--weight_decay', nargs='?', type=float, default=0.0001,
                             help="Weight_decay, Default 0.0001 (1e-4)")
 
-        parser.add_argument('--lr_step', nargs='?', type=int, default = 50,
+        parser.add_argument('--lr_step', nargs='?', type=int, default = 30,
                             help="Every 'lr_step' epoch, 'lr' decay, Default 50")
 
         parser.add_argument('--lr_decay', nargs='?', type=int, default = 0.6,
@@ -132,6 +132,8 @@ class FrameWork(object):
             self.best = 1000
             self.start = 0
             self.build_model()
+            with open('./logs/'+self.name+'.log', 'a') as file:
+                file.write(str(args.__dict__)+'\n')
 
         
     def resume(self):
