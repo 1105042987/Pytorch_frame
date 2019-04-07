@@ -72,9 +72,11 @@ def base_args(omit = False):
         parser.add_argument('--lr_decay', nargs='?', type=int, default = 0.6,
                             help="Learning rate decay rate, Default 0.6")
 
-
-    parser.add_argument('--resume', nargs='?', type=str, default = None,
-                        help="Resume from the checkpoint_address you give")
+        parser.add_argument('--resume', nargs='?', type=str, default = None,
+                            help="Resume from the checkpoint_address you give")
+    else:
+        parser.add_argument('--resume', nargs='+', type=str, default=None,
+                            help="Resume from the checkpoint_address you give")
     return parser
 
 

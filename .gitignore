@@ -1,6 +1,8 @@
 input/*
-dataset/*
-!dataset/dataset.py
+*.csv
+*.png
+*.jpg
+*.tif
 output/*
 logs/*
 checkpoints/*
