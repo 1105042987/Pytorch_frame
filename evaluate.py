@@ -3,7 +3,6 @@
 ''' 
 Copyright (c) 2019 Sufer_Qin
 '''
-from train import ErrorRate, AnsGet, loadData
 from frame.frame import base_args,FrameWork
 # args
 import argparse
@@ -16,15 +15,20 @@ def get_args():
                         help='Choose this if you want to get the answer of test_data')
     return parser.parse_args()
 
-if __name__ == "__main__":
+from train import D
+def evaluate():
     args = get_args()
     print(args)
-    
-    B = FrameWork(args)
-    
+
+    BODY = FrameWork(args)
+
     if args.ans:
-        testloader = loadData("TEST",None, B.args['batch'])
-        B.predict(testloader,AnsGet)
+        testloader = D.loadData("TEST", None, BODY.args['batch'])
+        BODY.predict(testloader, D.AnsGet)
     else:
-        validloader = loadData("validation", None, B.args['batch'])
-        B.evaluate(validloader,ErrorRate)
+        validloader = D.loadData("validation", None, BODY.args['batch'])
+        BODY.evaluate(validloader, D.ErrorRate)
+
+
+if __name__ == "__main__":
+    evaluate()
