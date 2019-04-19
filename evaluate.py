@@ -11,7 +11,7 @@ import time
 
 def get_args():
     parser = base_args(omit = True)
-    parser.add_argument('--ans', action='store_true',
+    parser.add_argument('-ans', action='store_true',
                         help='Choose this if you want to get the answer of test_data')
     return parser.parse_args()
 
@@ -28,7 +28,6 @@ def evaluate():
     else:
         validloader = D.loadData("validation", None, BODY.args['batch'])
         BODY.evaluate(validloader, D.ErrorRate)
-
 
 if __name__ == "__main__":
     evaluate()

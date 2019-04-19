@@ -3,6 +3,9 @@ input/*
 *.png
 *.jpg
 *.tif
+*.npz
+*.txt
+*.log
 .vscode
 output/*
 logs/*

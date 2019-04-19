@@ -11,7 +11,7 @@
     - 在函数 refresh_net_dic(net,arg) 中使用 arg\['name'\]\[x\] 更新参数；
 
 - 加载数据集
-  - 在 dataset 文件夹下创建一个文件夹存储数据集；
+  - 在 dataset 文件夹下存储数据集；
   - 在该文件夹中创建 dataset.py 文件：
     - 继承 torch.utils.data.Dataset 进行数据加载与预处理；
     - 实现 loadData 函数进行每个 epoch 的数据增强；

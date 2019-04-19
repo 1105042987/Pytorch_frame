@@ -20,14 +20,14 @@ import torchvision.transforms as T
 
 # ------------------------------------------ Datatset ------------------------------------------
 # Define dataset class
-class __Dataset(torch.utils.data.__Dataset):
+class Dataset(torch.utils.data.Dataset):
     def __init__(self, dataType, Num, transforms = None,has_label = True, **kwargs):
-        super(__Dataset, self).__init__()
+        super(Dataset, self).__init__()
         if Num is None:
-            data = pd.read_csv('./dataset/cifar10/'+dataType+'.csv')
+            data = pd.read_csv('./dataset/'+dataType+'.csv')
             self.lens = len(data)
         else:
-            data = pd.read_csv('./dataset/cifar10/'+dataType+'.csv', nrows=Num)
+            data = pd.read_csv('./dataset/'+dataType+'.csv', nrows=Num)
             self.lens = Num
         if has_label:
             self.labels = torch.from_numpy(data['Category'].values).long()
@@ -47,29 +47,31 @@ def loadData(name, Num, batch):
     if name.lower() == "train":
         transforms = T.Compose([
             T.ToPILImage(),
-            T.RandomResizedCrop(32,(0.7,1),(0.75,1.33)),
+            T.RandomCrop(32, padding=4),
+            # T.RandomResizedCrop(32,(0.7,1),(0.75,1.33)),
             T.RandomHorizontalFlip(),
-            T.RandomVerticalFlip(),
+            # T.RandomVerticalFlip(),
             T.ToTensor(),
             T.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
-        dataset = __Dataset(name,Num,transforms)
+        dataset = Dataset(name,Num,transforms)
 
     elif name == 'validation':
         transforms = T.Compose([
             T.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
-        dataset = __Dataset('test',Num,transforms)
+        dataset = Dataset('test',Num,transforms)
 
     elif name == "TEST" :
         transforms = T.Compose([
             T.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
-        dataset = __Dataset(name,Num,transforms,False)
+        dataset = Dataset(name,Num,transforms,False)
 
     return torch.utils.data.DataLoader(dataset, batch_size=batch, shuffle=True, num_workers=2)
 
-from frame.frame import weak_ErrorRate,weak_GetPredictAnswer,onehot2num
+from frame.frame import weak_ErrorRate,weak_GetPredictAnswer
+from utils.onehot import onehot2num
 
 class ErrorRate(weak_ErrorRate):
     def __init__(self):
@@ -88,6 +90,7 @@ class AnsGet(weak_GetPredictAnswer):
 
     def add(self, outputs, index):
         from torch import cat
+        index=index.reshape(-1, 1)
         if self.data is None:
             self.data = cat((index, onehot2num(outputs).to('cpu')), 1)
         else:
@@ -101,4 +104,14 @@ class AnsGet(weak_GetPredictAnswer):
 
 
 if __name__ == '__main__':
-    pass
+    pass 
+    # import pandas as pd
+    # import numpy as np
+    # pic = pd.read_csv('train.csv', nrows=3)
+    # pic1 = pic.drop(['ID', 'Category'], axis=1).values.reshape(-1, 3, 32, 32)/255.
+    # pic2 = pic.drop(['ID', 'Category'], axis=1).values.reshape(-1,32, 32,3)/255.
+    # print(pic1.shape)
+    # import cv2
+    # cv2.imshow('3xx', pic1[0, 0, :, :])
+    # cv2.imshow('xx3', pic2[0, :, :, 0])
+    # cv2.waitKey(0)

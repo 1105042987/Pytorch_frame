@@ -38,49 +38,49 @@ loss_dic={
 def base_args(omit = False):
     parser = argparse.ArgumentParser(description='PyTorch Training')
 
-    parser.add_argument('--gpu', nargs='?', type=int, default=0,
+    parser.add_argument('-gpu', nargs='?', type=int, default=0,
                         help="GPU number,    Default 0")
     if omit == False:
         from train import net_dic
         parser.add_argument('-n', nargs='?', type=str, choices=list(net_dic.keys()), default = list(net_dic.keys())[0],
                             help="Net choose:{}, Default:{}".format(list(net_dic.keys()),list(net_dic.keys())[0]))
 
-        parser.add_argument('--suf', nargs='?', type=str, default = '',
+        parser.add_argument('-suf', nargs='?', type=str, default = '',
                             help="Suffix name")
 
-        parser.add_argument('--max_iter', nargs='?', type=int, default = 300,
+        parser.add_argument('-max_iter', nargs='?', type=int, default = 300,
                             help="Epoch num, Default 300")
 
-        parser.add_argument('--batch', nargs='?', type=int, default=128,
-                            help="Batch size")
+        parser.add_argument('-batch', nargs='?', type=int, default=128,
+                            help="Batch size, Default 128")
 
-        parser.add_argument('--loss', nargs='?', type=str, choices=list(loss_dic.keys()),default=list(loss_dic.keys())[0],
+        parser.add_argument('-loss', nargs='?', type=str, choices=list(loss_dic.keys()),default=list(loss_dic.keys())[0],
                             help="Loss function choose:{}, Default:{}".format(list(loss_dic.keys()),list(loss_dic.keys())[0]))
 
-        parser.add_argument('--opt', nargs='?', type=str, choices=['adam','sgd'], default = 'adam',
+        parser.add_argument('-opt', nargs='?', type=str, choices=['adam','sgd'], default = 'adam',
                             help="Optimizer type: ['adam','sgd'],   Default 'adam'")
 
-        parser.add_argument('--lr', nargs='?', type=float, default=0.001,
+        parser.add_argument('-lr', nargs='?', type=float, default=0.001,
                             help="Learning rate, Default 0.001 (1e-3)")
 
-        parser.add_argument('--weight_decay', nargs='?', type=float, default=0.0001,
+        parser.add_argument('-weight_decay', nargs='?', type=float, default=0.0001,
                             help="Weight_decay, Default 0.0001 (1e-4)")
 
-        parser.add_argument('--lr_step', nargs='?', type=int, default = 30,
+        parser.add_argument('-lr_step', nargs='*', type=int, default = [30],
                             help="Every 'lr_step' epoch, 'lr' decay, Default 50")
 
-        parser.add_argument('--lr_decay', nargs='?', type=int, default = 0.6,
+        parser.add_argument('-lr_decay', nargs='?', type=float, default = 0.6,
                             help="Learning rate decay rate, Default 0.6")
 
-        parser.add_argument('--resume', nargs='?', type=str, default = None,
+        parser.add_argument('-resume', nargs='?', type=str, default = None,
                             help="Resume from the checkpoint_address you give")
     else:
-        parser.add_argument('--resume', nargs='+', type=str, default=None,
+        parser.add_argument('-resume', nargs='+', type=str, default=None,
                             help="Resume from the checkpoint_address you give")
     return parser
 
 
-class weak_ErrorRate(metaclass=ABCMeta):
+class weak_ErrorRate():
     def __init__(self):
         super(weak_ErrorRate,self).__init__()
         self.reset()
@@ -92,7 +92,6 @@ class weak_ErrorRate(metaclass=ABCMeta):
     def value(self):
         return [self.error/self.total]
 
-    @abstractmethod
     def add(self,out,tar):
         pass
 
@@ -112,23 +111,6 @@ class weak_GetPredictAnswer(metaclass=ABCMeta):
         pass
         
 
-def num2onehot(num_label, scatter_target_num):
-    if type(num_label) != torch.Tensor:
-        raise('num2onehot: num\'s type must be torch.Tensor')
-    if len(num_label.shape) != 2 or num_label.shape[1] != 1:
-        raise('num2onehot: num must in shape (-1,1)')
-    return torch.zeros(num_label.shape[0], scatter_target_num).scatter_(1, num_label, 1).long()
-
-
-def onehot2num(onehot_label):
-    if type(onehot_label) != torch.Tensor:
-        raise('onehot2num: onehot\'s type must be torch.Tensor')
-    if len(onehot_label.shape) != 2:
-        raise('onehot2num: onehot must in shape (len_of_batch,len_of_target_class)')
-    return torch.max(onehot_label, 1)[1].reshape(-1, 1).long()
-
-
-
 # ---------------------------------------- Architecture ---------------------------------------------
 class FrameWork(object):
     def __init__(self,args):
@@ -137,8 +119,10 @@ class FrameWork(object):
         self.device = torch.device('cuda', args.gpu) if torch.cuda.is_available() else torch.device('cpu')
         
         if args.resume is not None:
-            self.name = findall(r"checkpoints/(.+?).pth",args.resume)[0]
+            self.name = findall(r"checkpoints/(.+?).pth",args.resume[0])[0]
             self.resume()
+            if self.start >= self.args['max_iter'] - 1 and 'max_iter' in args.__dict__:
+                self.args['max_iter'] += args.max_iter
         else:
             self.name = timestamp+'_'+args.n if args.suf=='' else timestamp+'_'+args.n+'_'+args.suf
             if isExist('./checkpoints/'+self.name+'.pth'):
@@ -177,8 +161,13 @@ class FrameWork(object):
         if self.args['opt'] == 'adam':
             self.opt = torch.optim.Adam(self.net.parameters(), lr = self.args['lr'], weight_decay = self.args['weight_decay'])
         elif self.args['opt'] == 'sgd':
-            self.opt = torch.optim.SGD(self.net.parameters(), lr = self.args['lr'], weight_decay = self.args['weight_decay'])
-        self.sch = torch.optim.lr_scheduler.StepLR(self.opt, step_size = self.args['lr_step'], gamma = self.args['lr_decay'])
+            self.opt = torch.optim.SGD(self.net.parameters(), lr = self.args['lr'], weight_decay = self.args['weight_decay'],momentum=0.9)
+        if len(self.args['lr_step'])==1:
+            milestones = list(np.arange(0,self.args['max_iter'],self.args['lr_step'][0]))
+        else:
+            milestones = self.args['lr_step']
+        self.sch = torch.optim.lr_scheduler.MultiStepLR(self.opt, milestones, gamma=self.args['lr_decay'], last_epoch=-1)
+        # self.sch = torch.optim.lr_scheduler.StepLR(self.opt, step_size = self.args['lr_step'], gamma = self.args['lr_decay'])
         self.criterion = loss_dic[self.args['loss']]
 
 
@@ -215,24 +204,20 @@ class FrameWork(object):
             raise("'ErrorClass' is not the sub class of 'weak_ErrorRate'")
         # create record meter
         loss_meter= meter.AverageValueMeter()
-        error_meter = ErrorClass() if ErrorClass is not weak_ErrorRate else None
-        if validation_loader is not None:
-            loss_meter2 = meter.AverageValueMeter()
-            error_meter2 = ErrorClass() if ErrorClass is not weak_ErrorRate else None
-        else:
-            loss_meter2,error_meter2 = None,None
+        error_meter = ErrorClass()
+        loss_meter2 = meter.AverageValueMeter()
+        error_meter2 = ErrorClass()
         print_dic={
             'Train_Loss':loss_meter,
-            'Train_Error':error_meter,
-            'Validation_Loss':loss_meter2,
-            'Validation_Error':error_meter2,
+            'Train_Error':error_meter if ErrorClass is not weak_ErrorRate else None,
+            'Validation_Loss':loss_meter2 if validation_loader is not None else None,
+            'Validation_Error': error_meter2 if (validation_loader is not None) and (ErrorClass is not weak_ErrorRate) else None,
         }
         for epoch in range(self.start,self.args['max_iter']):
-            # Make sure you enable the auto-grad engine
+            # enable the auto-grad engine
             self.net.train()
             loss_meter.reset()
-            if error_meter is not None:
-                error_meter.reset()
+            error_meter.reset()
             # train
             for inputs, targets in tqdm(train_loader):
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -245,12 +230,11 @@ class FrameWork(object):
                 self.opt.step()
 
                 loss_meter.add(loss.item())
-                if error_meter is not None:
-                    error_meter.add(outputs,targets)
+                error_meter.add(outputs,targets)
             self.sch.step()
             # validation
             if validation_loader is not None:
-                # Make sure you disable the auto-grad engine
+                # disable the auto-grad engine
                 self.net.eval()
                 loss_meter2.reset()
                 error_meter2.reset()
@@ -261,11 +245,19 @@ class FrameWork(object):
                     loss = self.criterion(outputs, targets)
 
                     loss_meter2.add(loss.item())
-                    if error_meter2 is not None:
-                        error_meter2.add(outputs,targets)
+                    error_meter2.add(outputs,targets)
+            # save
+                if ErrorClass is not weak_ErrorRate:
+                    self.save(epoch,error_meter2.value()[0])
+                else:
+                    self.save(epoch,loss_meter2.value()[0])
+            else:
+                if ErrorClass is not weak_ErrorRate:
+                    self.save(epoch, error_meter.value()[0])
+                else:
+                    self.save(epoch, loss_meter.value()[0])
             # record
             self.log_record(epoch,print_dic,True)
-            self.save(epoch,loss_meter.value()[0])
 
 
     def evaluate(self,test_loader,ErrorClass=weak_ErrorRate):
@@ -274,10 +266,10 @@ class FrameWork(object):
         # Cancel auto-grad engine
         self.net.eval() 
         loss_meter = meter.AverageValueMeter()
-        error_meter = ErrorClass() if ErrorClass is not weak_ErrorRate else None
+        error_meter = ErrorClass()
         print_dic={
             'Test_Loss':loss_meter,
-            'Test_Error':error_meter,
+            'Test_Error': error_meter if ErrorClass is not weak_ErrorRate else None,
         }
         loss_meter.reset()
         error_meter.reset()
@@ -305,7 +297,8 @@ class FrameWork(object):
         for inputs,index in tqdm(test_loader):
             inputs = inputs.to(self.device)
             answer.add(self.net(inputs),index)
-        answer.save(self.name)
+        return answer.save(self.name)
+
 
 
 if __name__ == '__main__':
