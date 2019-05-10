@@ -12,7 +12,7 @@ import time
 import dataset.dataset as D
 # Define architecture of the network
 from frame.net.LeNet          import LeNet
-from frame.net.DenseNet       import DenseNet121
+from frame.net.DenseNet       import DenseNet121,DenseNet169
 from frame.net.googlenet      import GoogLeNet
 from frame.net.mobilenetv2    import MobileNetV2
 from frame.net.vgg            import VGG
@@ -21,7 +21,7 @@ from frame.net.wrn            import WideResNet
 net_dic = {
     'le':LeNet(), 
     'goo':GoogLeNet(),
-    'den':DenseNet121(), 
+    'den':DenseNet169(), 
     'mob':MobileNetV2(10), 
     'vgg':VGG('VGG19'),
     'wrn':0,

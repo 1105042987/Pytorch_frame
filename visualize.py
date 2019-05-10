@@ -1,3 +1,9 @@
+#!/usr/bin/env
+# -*- coding: utf-8 -*-
+''' 
+Copyright (c) 2019 Sufer_Qin
+'''
+
 from re import findall
 from frame.frame import base_args
 import argparse

@@ -155,7 +155,6 @@ class FrameWork(object):
     def build_model(self):
         # Must be used after self have 'args' and 'device'
         from train import refresh_net_dic, net_dic
-        print(net_dic['wrn'])
         refresh_net_dic(net_dic,self.args)
         self.net = net_dic[self.args['n']].to(self.device)
         if self.args['opt'] == 'adam':

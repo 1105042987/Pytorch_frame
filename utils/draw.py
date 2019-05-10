@@ -1,3 +1,8 @@
+#!/usr/bin/env
+# -*- coding: utf-8 -*-
+''' 
+Copyright (c) 2019 Sufer_Qin
+'''
 from re import findall
 import matplotlib.pyplot as plt
 import matplotlib

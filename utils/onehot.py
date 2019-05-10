@@ -1,3 +1,8 @@
+#!/usr/bin/env
+# -*- coding: utf-8 -*-
+''' 
+Copyright (c) 2019 Sufer_Qin
+'''
 import torch
 
 def num2onehot(num_label, scatter_target_num):

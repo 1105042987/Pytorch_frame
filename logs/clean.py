@@ -1,5 +1,10 @@
+#!/usr/bin/env
 #coding=utf-8
 # -*- coding: utf-8 -*-
+''' 
+Copyright (c) 2019 Sufer_Qin
+'''
+
 import os
 import sys
 # sys.setdefaultencoding('utf-8')
